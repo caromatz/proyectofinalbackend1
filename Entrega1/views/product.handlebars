@@ -1,8 +1,22 @@
-<h1>{{product.title}}</h1>
-<p>{{product.description}}</p>
-<p>Precio: ${{product.price}}</p>
-<p>Categoría: {{product.category}}</p>
+<ul>
+  {{#each products}}
+    <li>
+      <a href="/products/{{this._id}}">{{this.title}}</a> - ${{this.price}}
+      <form action="/api/carts/{{cartId}}/products/{{this._id}}" method="POST" style="display:inline">
+        <button type="submit">Agregar al carrito</button>
+      </form>
+    </li>
+  {{/each}}
+</ul>
 
-<form action="/api/carts/{{cartId}}/products/{{product._id}}" method="POST">
-  <button type="submit">Agregar al carrito</button>
-</form>
+<div>
+  {{#if pagination.hasPrevPage}}
+    <a href="{{pagination.prevLink}}">Anterior</a>
+  {{/if}}
+
+  Página {{pagination.page}} de {{pagination.totalPages}}
+
+  {{#if pagination.hasNextPage}}
+    <a href="{{pagination.nextLink}}">Siguiente</a>
+  {{/if}}
+</div>

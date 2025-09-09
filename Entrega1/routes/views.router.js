@@ -7,7 +7,22 @@ const router = Router();
 const productManager = new ProductManager();
 const cartManager = new CartManager();
 
-// Mostrar productos con paginación
+// Middleware para generar/reusar cartId en todas las vistas
+router.use(async (req, res, next) => {
+  try {
+    if (!req.session) req.session = {}; // por si no estás usando express-session
+    if (!req.session.cartId) {
+      const cart = await cartManager.createCart();
+      req.session.cartId = cart._id;
+    }
+    res.locals.cartId = req.session.cartId; // disponible en todas las vistas
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Mostrar productos con paginación y filtros
 router.get('/products', async (req, res, next) => {
   try {
     const { page = 1, limit = 10, sort, query } = req.query;
@@ -40,9 +55,8 @@ router.get('/products/:pid', async (req, res, next) => {
     const product = await productManager.getProductById(req.params.pid);
     if (!product) return res.status(404).send('Producto no encontrado');
 
-    // Para el botón de agregar al carrito, pasamos un cartId por query o vacío
-    const cartId = req.query.cartId || '';
-    res.render('product', { title: product.title, product, cartId });
+    // cartId ya viene de res.locals
+    res.render('product', { title: product.title, product });
   } catch (err) {
     next(err);
   }
@@ -55,8 +69,8 @@ router.get('/carts/:cid', async (req, res, next) => {
     if (!cart) return res.status(404).send('Carrito no encontrado');
 
     // Hacer populate de los productos
-    await cart.populate('products.product').execPopulate?.(); // compatible con Mongoose 6+
-    
+    await cart.populate('products.product');
+
     res.render('cart', { title: 'Carrito', cart });
   } catch (err) {
     next(err);

@@ -1,15 +1,35 @@
 import express from 'express';
+import session from 'express-session';
 import productsRouter from './routes/products.router.js';
 import cartsRouter from './routes/carts.router.js';
 import viewsRouter from './routes/views.router.js';
 import errorHandler from './middlewares/errorHandler.js';
 import { connectDB } from './db.js';
+import CartManager from './managers/CartManager.js';
 
 const app = express();
+const cartManager = new CartManager();
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Sesiones
+app.use(session({
+  secret: 'secreto123', // poner algo seguro
+  resave: false,
+  saveUninitialized: true
+}));
+
+// Middleware para generar o recuperar cartId
+app.use(async (req, res, next) => {
+  if (!req.session.cartId) {
+    const cart = await cartManager.createCart();
+    req.session.cartId = cart._id;
+  }
+  res.locals.cartId = req.session.cartId; // Disponible en todas las vistas
+  next();
+});
 
 // Rutas
 app.use('/api/products', productsRouter);
