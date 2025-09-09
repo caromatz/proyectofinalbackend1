@@ -1,40 +1,33 @@
-import { Router } from "express";
-import { Product } from "../models/Product.js";
+import { Router } from 'express';
+import ProductModel from '../models/Product.js';
+import mongoosePaginate from 'mongoose-paginate-v2';
 
 const router = Router();
 
-router.get("/", async (req, res, next) => {
+// GET /products
+router.get('/', async (req, res) => {
   try {
-    // Parámetros de query
-    let { limit = 10, page = 1, sort, category, status } = req.query;
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const sort = req.query.sort === 'asc' ? { price: 1 } : req.query.sort === 'desc' ? { price: -1 } : {};
+    const query = req.query.query ? { category: req.query.query } : {};
 
-    limit = parseInt(limit);
-    page = parseInt(page);
-
-    // Construir query
-    const query = {};
-    if (category) query.category = category;
-    if (status !== undefined) query.status = status === "true";
-
-    // Opciones de paginación
     const options = {
       page,
       limit,
-      sort: sort ? { price: sort === "asc" ? 1 : -1 } : {},
-      lean: true // devuelve objetos planos en vez de documentos Mongoose
+      sort,
+      lean: true,
     };
 
-    // Ejecutar paginación
-    const result = await Product.paginate(query, options);
+    const result = await ProductModel.paginate(query, options);
 
     // Construir prevLink y nextLink
-    const baseUrl = req.protocol + "://" + req.get("host") + req.path;
-    const prevLink = result.hasPrevPage ? `${baseUrl}?page=${result.prevPage}&limit=${limit}${sort ? `&sort=${sort}` : ""}${category ? `&category=${category}` : ""}${status !== undefined ? `&status=${status}` : ""}` : null;
-    const nextLink = result.hasNextPage ? `${baseUrl}?page=${result.nextPage}&limit=${limit}${sort ? `&sort=${sort}` : ""}${category ? `&category=${category}` : ""}${status !== undefined ? `&status=${status}` : ""}` : null;
+    const baseUrl = `${req.protocol}://${req.get('host')}${req.baseUrl}`;
+    const prevLink = result.hasPrevPage ? `${baseUrl}?page=${result.prevPage}&limit=${limit}&sort=${req.query.sort || ''}&query=${req.query.query || ''}` : null;
+    const nextLink = result.hasNextPage ? `${baseUrl}?page=${result.nextPage}&limit=${limit}&sort=${req.query.sort || ''}&query=${req.query.query || ''}` : null;
 
-    // Respuesta en formato solicitado
     res.json({
-      status: "success",
+      status: 'success',
       payload: result.docs,
       totalPages: result.totalPages,
       prevPage: result.prevPage,
@@ -43,10 +36,10 @@ router.get("/", async (req, res, next) => {
       hasPrevPage: result.hasPrevPage,
       hasNextPage: result.hasNextPage,
       prevLink,
-      nextLink
+      nextLink,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
   }
 });
 
