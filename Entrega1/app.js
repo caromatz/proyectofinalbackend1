@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Sesiones
 app.use(session({
-  secret: 'secreto123', // poner algo seguro
+  secret: 'secreto123', 
   resave: false,
   saveUninitialized: true
 }));
@@ -27,7 +27,7 @@ app.use(async (req, res, next) => {
     const cart = await cartManager.createCart();
     req.session.cartId = cart._id;
   }
-  res.locals.cartId = req.session.cartId; // Disponible en todas las vistas
+  res.locals.cartId = req.session.cartId;
   next();
 });
 
