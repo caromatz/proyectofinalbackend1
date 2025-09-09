@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "express-handlebars": "^8.0.1",
+    "mongoose": "^8.18.1",
+    "mongoose-paginate-v2": "^1.9.1"
+  }
+}
