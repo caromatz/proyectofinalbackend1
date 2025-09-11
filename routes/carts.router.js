@@ -4,7 +4,7 @@ import CartManager from "../managers/CartManager.js";
 const router = Router();
 const cartManager = new CartManager();
 
-// Agregar producto al carrito
+
 router.post("/:cid/products/:pid", async (req, res, next) => {
   try {
     const { cid, pid } = req.params;
@@ -16,7 +16,7 @@ router.post("/:cid/products/:pid", async (req, res, next) => {
   }
 });
 
-// Eliminar producto del carrito
+
 router.delete("/:cid/products/:pid", async (req, res, next) => {
   try {
     const { cid, pid } = req.params;
@@ -27,7 +27,6 @@ router.delete("/:cid/products/:pid", async (req, res, next) => {
   }
 });
 
-// Actualizar cantidad de un producto
 router.put("/:cid/products/:pid", async (req, res, next) => {
   try {
     const { cid, pid } = req.params;
@@ -39,7 +38,7 @@ router.put("/:cid/products/:pid", async (req, res, next) => {
   }
 });
 
-// Reemplazar todos los productos del carrito
+
 router.put("/:cid", async (req, res, next) => {
   try {
     const { cid } = req.params;
@@ -51,7 +50,7 @@ router.put("/:cid", async (req, res, next) => {
   }
 });
 
-// Vaciar carrito
+
 router.delete("/:cid", async (req, res, next) => {
   try {
     const { cid } = req.params;

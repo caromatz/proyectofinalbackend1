@@ -13,11 +13,10 @@ import CartManager from './managers/CartManager.js';
 const app = express();
 const cartManager = new CartManager();
 
-// Para usar __dirname con ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configuración de Handlebars con partials
+
 app.engine(
   'handlebars',
   handlebars.engine({
@@ -29,14 +28,14 @@ app.engine(
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'views'));
 
-// Archivos estáticos (CSS, imágenes, JS del cliente)
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middlewares
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Sesiones
+
 app.use(
   session({
     secret: 'secreto123',
@@ -45,7 +44,7 @@ app.use(
   })
 );
 
-// Middleware para generar o recuperar cartId
+
 app.use(async (req, res, next) => {
   if (!req.session.cartId) {
     const cart = await cartManager.createCart();
@@ -55,17 +54,16 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Rutas
+
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/', viewsRouter);
 
-// Middleware de manejo de errores
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 8080;
 
-// Conectar a MongoDB primero, luego levantar servidor
 connectDB()
   .then(() => {
     app.listen(PORT, () => {

@@ -6,7 +6,7 @@ const router = Router();
 const productManager = new ProductManager();
 const cartManager = new CartManager();
 
-// Mostrar productos con paginación, filtrado y ordenamiento
+
 router.get('/products', async (req, res, next) => {
   try {
     const { page = 1, limit = 10, sort, query } = req.query;
@@ -26,36 +26,41 @@ router.get('/products', async (req, res, next) => {
       hasPrevPage: result.hasPrevPage,
       hasNextPage: result.hasNextPage,
       prevLink: result.hasPrevPage ? `/products?page=${result.prevPage}&limit=${limit}` : null,
-      nextLink: result.hasNextPage ? `/products?page=${result.nextPage}&limit=${limit}` : null
+      nextLink: result.hasNextPage ? `/products?page=${result.nextPage}&limit=${limit}` : null,
+      cartId: req.session.cartId // <--- clave para el navbar
     });
   } catch (err) {
     next(err);
   }
 });
 
-// Producto individual
+
 router.get('/products/:pid', async (req, res, next) => {
   try {
     const product = await productManager.getProductById(req.params.pid);
     if (!product) return res.status(404).send('Producto no encontrado');
 
-    const cartId = req.session.cartId || '';
-    res.render('product', { title: product.title, product, cartId });
+    res.render('product', { 
+      title: product.title, 
+      product, 
+      cartId: req.session.cartId // <--- clave para el navbar
+    });
   } catch (err) {
     next(err);
   }
 });
 
-// Ver carrito
+
 router.get('/carts/:cid', async (req, res, next) => {
   try {
     const cart = await cartManager.getCartById(req.params.cid);
     if (!cart) return res.status(404).send('Carrito no encontrado');
 
-    // Hacer populate de los productos
-    await cart.populate('products.product');
-
-    res.render('cart', { title: 'Carrito', cart });
+    res.render('cart', { 
+      title: 'Carrito', 
+      cart, 
+      cartId: req.session.cartId 
+    });
   } catch (err) {
     next(err);
   }

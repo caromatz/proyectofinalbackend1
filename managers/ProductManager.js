@@ -1,62 +1,47 @@
 // managers/ProductManager.js
-import Product from '../models/Product.js'; // default export
+import Product from '../models/Product.js';
 
 export default class ProductManager {
   async getProducts({ limit = 10, page = 1, query = {}, sort }) {
     const filter = {};
 
-    // Filtros básicos
     if (query.category) filter.category = query.category;
-    if (query.status !== undefined) filter.status = query.status;
+    if (query.status !== undefined) filter.status = query.status === 'true';
 
-    // Rango de precios
-    if (query.minPrice) {
-      filter.price = { ...filter.price, $gte: Number(query.minPrice) };
-    }
-    if (query.maxPrice) {
-      filter.price = { ...filter.price, $lte: Number(query.maxPrice) };
-    }
+    if (query.minPrice) filter.price = { ...filter.price, $gte: Number(query.minPrice) };
+    if (query.maxPrice) filter.price = { ...filter.price, $lte: Number(query.maxPrice) };
 
-    // Opciones de paginación y ordenamiento
     const options = {
+      page: Number(page),
       limit: Number(limit),
-      skip: (Number(page) - 1) * Number(limit),
       sort: {},
+      lean: true
     };
 
     if (sort) {
-      // si viene como "asc" o "desc"
-      if (sort === 'asc') options.sort.price = 1;
-      else if (sort === 'desc') options.sort.price = -1;
-      else {
-        // si viene como "price" o "-price"
-        const field = sort.replace('-', '');
-        const order = sort.startsWith('-') ? -1 : 1;
-        options.sort[field] = order;
-      }
+      options.sort.price = sort === 'asc' ? 1 : -1;
     }
 
-    const products = await Product.find(filter, null, options);
-    const total = await Product.countDocuments(filter);
-    const totalPages = Math.ceil(total / limit);
+    const result = await Product.paginate(filter, options);
+
+    const buildLink = (p) => `/api/products?limit=${limit}&page=${p}${sort ? `&sort=${sort}` : ''}${query.category ? `&category=${query.category}` : ''}${query.status ? `&status=${query.status}` : ''}`;
 
     return {
       status: 'success',
-      payload: products,
-      totalDocs: total,
-      totalPages,
-      prevPage: page > 1 ? page - 1 : null,
-      nextPage: page < totalPages ? page + 1 : null,
-      page: Number(page),
-      hasPrevPage: page > 1,
-      hasNextPage: page < totalPages,
-      prevLink: page > 1 ? `/api/products?limit=${limit}&page=${page - 1}` : null,
-      nextLink: page < totalPages ? `/api/products?limit=${limit}&page=${page + 1}` : null,
+      payload: result.docs,
+      totalPages: result.totalPages,
+      prevPage: result.hasPrevPage ? result.prevPage : null,
+      nextPage: result.hasNextPage ? result.nextPage : null,
+      page: result.page,
+      hasPrevPage: result.hasPrevPage,
+      hasNextPage: result.hasNextPage,
+      prevLink: result.hasPrevPage ? buildLink(result.prevPage) : null,
+      nextLink: result.hasNextPage ? buildLink(result.nextPage) : null,
     };
   }
 
   async getProductById(id) {
-    return await Product.findById(id);
+    return await Product.findById(id).lean();
   }
 
   async addProduct(product) {
@@ -69,23 +54,5 @@ export default class ProductManager {
 
   async deleteProduct(id) {
     return await Product.findByIdAndDelete(id);
-  }
-
-  // Incrementar stock con $inc
-  async increaseStock(id, amount) {
-    return await Product.findByIdAndUpdate(
-      id,
-      { $inc: { stock: amount } },
-      { new: true }
-    );
-  }
-
-  // Quitar descripción con $unset
-  async removeDescription(id) {
-    return await Product.findByIdAndUpdate(
-      id,
-      { $unset: { description: "" } },
-      { new: true }
-    );
   }
 }

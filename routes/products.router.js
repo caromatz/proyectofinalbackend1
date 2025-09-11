@@ -1,16 +1,15 @@
-// routes/products.router.js
 import { Router } from 'express';
 import ProductManager from '../managers/ProductManager.js';
+import mongoose from 'mongoose';
 
 const router = Router();
 const productManager = new ProductManager();
 
-// GET /api/products
+
 router.get('/', async (req, res) => {
   try {
     const { limit, page, sort, category, status, minPrice, maxPrice } = req.query;
 
-    // Construir objeto query para el manager
     const query = {};
     if (category) query.category = category;
     if (status !== undefined) query.status = status === 'true';
@@ -18,8 +17,8 @@ router.get('/', async (req, res) => {
     if (maxPrice) query.maxPrice = Number(maxPrice);
 
     const result = await productManager.getProducts({
-      limit,
-      page,
+      limit: Number(limit) || 10,
+      page: Number(page) || 1,
       sort,
       query,
     });
@@ -31,13 +30,21 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/products/:pid
+
 router.get('/:pid', async (req, res) => {
   try {
-    const product = await productManager.getProductById(req.params.pid);
+    const { pid } = req.params;
+
+    
+    if (!mongoose.Types.ObjectId.isValid(pid)) {
+      return res.status(400).json({ status: 'error', message: 'ID de producto inválido' });
+    }
+
+    const product = await productManager.getProductById(pid);
     if (!product) {
       return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
     }
+
     res.json({ status: 'success', payload: product });
   } catch (err) {
     console.error(err);

@@ -1,18 +1,17 @@
+// managers/CartManager.js
 import CartModel from "../models/Carts.js";
 
 export default class CartManager {
-  // Obtener carrito por ID
+ 
   async getCartById(cid) {
-    return await CartModel.findById(cid).populate("products.product").lean();
+    return await CartModel.findById(cid).populate("products.product");
   }
 
-  // Crear un carrito nuevo
-  async createCart() {
+   async createCart() {
     const cart = new CartModel({ products: [] });
     return await cart.save();
   }
 
-  // Agregar un producto al carrito
   async addProduct(cid, pid, quantity = 1) {
     const cart = await CartModel.findById(cid);
     if (!cart) throw new Error("Carrito no encontrado");
@@ -27,7 +26,7 @@ export default class CartManager {
     return await cart.save();
   }
 
-  // Eliminar un producto del carrito
+ 
   async deleteProduct(cid, pid) {
     const cart = await CartModel.findById(cid);
     if (!cart) throw new Error("Carrito no encontrado");
@@ -36,7 +35,7 @@ export default class CartManager {
     return await cart.save();
   }
 
-  // Actualizar la cantidad de un producto
+  
   async updateProductQuantity(cid, pid, quantity) {
     const cart = await CartModel.findById(cid);
     if (!cart) throw new Error("Carrito no encontrado");
@@ -48,7 +47,7 @@ export default class CartManager {
     return await cart.save();
   }
 
-  // Reemplazar todos los productos del carrito
+  
   async updateCartProducts(cid, newProducts) {
     const cart = await CartModel.findById(cid);
     if (!cart) throw new Error("Carrito no encontrado");
@@ -61,7 +60,7 @@ export default class CartManager {
     return await cart.save();
   }
 
-  // Vaciar carrito
+  
   async clearCart(cid) {
     const cart = await CartModel.findById(cid);
     if (!cart) throw new Error("Carrito no encontrado");

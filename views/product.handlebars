@@ -4,5 +4,6 @@
 <p>Categoría: {{product.category}}</p>
 
 <form action="/api/carts/{{cartId}}/products/{{product._id}}" method="POST">
+  <input type="number" name="quantity" value="1" min="1">
   <button type="submit">Agregar al carrito</button>
 </form>
